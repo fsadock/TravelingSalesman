@@ -157,9 +157,7 @@ print(matriz)
 
 if __name__ == '__main__':
 
-    
     start_time = time.time()
-    
     x = initialSol(0,len(matriz))    
     # print(x)
 
