@@ -5,45 +5,40 @@ import matplotlib.pyplot as plt
 import time
 
 
-def setOfX(x):
-    if len(set(x)) != len(x):
-        print("##### ATENTION!!!!!!!!!!!!!!! #####")
-        return True
-    return False
-
-# gera uma lista aleatoria de inteiros entre inclusivo _a_ e exclusivo _b_
+# generates a random list of integers between (including) _a_ and _b_
 def initialSol(a,b):
     x = list(range(a,b))
     random.shuffle(x)
     return x
 
+# cost function
 def fobj(x, matriz):
-    custo = 0
+    cost = 0
     for i in range(len(x)-1):
-        custo += matriz[x[i]][x[i+1]]
-    custo+=matriz[x[len(x)-1]][x[0]]
-    return custo
+        cost += matriz[x[i]][x[i+1]]
+    cost+=matriz[x[len(x)-1]][x[0]]
+    return cost
 
+# responsible for changing neighborhoods
 def neighborhoodChange(x, x_lin, k, matriz):
-    # print("### ---------------Iniciando o neighborhoodChange!--------------- ###")
-    custoNovo = fobj(x_lin, matriz)
-    custoVelho = fobj(x, matriz)
-    if  custoNovo < custoVelho:
-        x = x_lin           # se for menor, começa no k=1 para x_lin
+    newCost = fobj(x_lin, matriz)
+    oldCost = fobj(x, matriz)
+    if  newCost < oldCost:
+        x = x_lin           # if newCost is less than oldCost, restart the neighborhoods (k=1)
         k = 1
-    else:                   # caso contrario passa para o proximo k
+    else:                   # otherwise go to the next neighborhood (k+1)
         k = k+1
     return x,k
 
+# 'shake' neighborhoods
 def shake(x,k):
-    # print("### ---------------Iniciando o shake!--------------- ###")
     i,j,u = random.sample(list(range(len(matriz))),3)
     y = x[:]
 
-    if k == 1:                  # troca duas cidades aleatorias de lugar
+    if k == 1:                  # swap two random cities
         y[i], y[j] = y[j], y[i]
 
-    elif k == 2:                # troca tres cidades aleatorias de lugar
+    elif k == 2:                # swap three random cities
         y[i], y[j], y[u] = y[j], y[u], y[i]
 
     elif k == 3:                # shift positions
@@ -51,15 +46,15 @@ def shake(x,k):
             y = y[i:j] + y[0:i] + y[j:len(x)]
         else:
             y = y[j:i] + y[0:j] + y[i:len(x)]
-    elif k == 4:
+    elif k == 4:                # 2-opt
         if i < j:
             y = y[0:i] + y[i:j][::-1] + y[j:len(x)]
         else:
             y = y[0:j] + y[j:i][::-1] + y[i:len(x)]
     return y
 
+# returns the first improvement after permutating combinations of x
 def firstImprovement(x, k, matriz):
-    # print("### ---------------Iniciando o FirstImprovement!--------------- ###")
     y = x[:]
     if k == 1:
         for i in range(len(y)):
@@ -67,10 +62,9 @@ def firstImprovement(x, k, matriz):
                 if i != j:
                     y[i], y[j] = y[j], y[i]
                     if fobj(y, matriz) < fobj(x, matriz): # if y is better than x, return y ( FIRST IMPROVEMENT )
-                    # print("### --------------- Houve melhora :) --------------- ###")
                         return y
                     y = x[:]                              # else: sets y = x to proceed to the next permutation
-    elif k == 2:
+    elif k == 2:                            # this k == 2 sucks.
         for i in range(len(y)):
             for j in range(i, len(y)):
                 for u in range(j, len(y)):
@@ -79,16 +73,17 @@ def firstImprovement(x, k, matriz):
                         if fobj(y, matriz) < fobj(x, matriz):
                             return y
                         y = x[:]
-        # print("### ---------------Não houve melhora :( --------------- ###")
     return x                                  # if no other permutation is better than the original, returns x
 
+# Variable Neighborhood Descent
 def VND(x , k_max, matriz):
     k = 1
     while k <= k_max:
-        x_lin = firstImprovement(x, k, matriz)
-        x,k = neighborhoodChange(x, x_lin, k, matriz) # Compara x com x_lin
+        x_lin = firstImprovement(x, k, matriz)        
+        x,k = neighborhoodChange(x, x_lin, k, matriz) # Compare x and x_lin
     return x
 
+# Reduced Variable Neighborhood Search
 def rvns(x, k_max, t_max, matriz):
     t = 0
     results = []
@@ -101,6 +96,7 @@ def rvns(x, k_max, t_max, matriz):
         results.append(np.round(fobj(x, matriz)))
     return x, results
 
+# Basic Variable Neighborhood Search
 def bvns(x, k_max, t_max, matriz):
     t = 0
     results = []
@@ -115,8 +111,8 @@ def bvns(x, k_max, t_max, matriz):
         results.append(np.round(fobj(x, matriz)))
     return x, results
 
+# General Variable Neighborhood Search
 def gvns(x,l_max, k_max, t_max, matriz):
-
     t = 0
     results = []
     while t<=t_max:
@@ -131,9 +127,10 @@ def gvns(x,l_max, k_max, t_max, matriz):
     return x, results
 
 
-# global lenMatrix
-arquivo = "e:\\Google Drive\\UFMG\\2021.1\\Teoria da Decisao\\TC\\distancia.csv"
-matriz0 = np.genfromtxt(arquivo, delimiter=',')
+arquivo = "distance.csv"
+matriz0 = np.genfromtxt(arquivo, delimiter=',') # uses numpy to read the matrix from the csv file
+
+# a smaller distance matrix
 matriz1 = [
         [0, 2451, 713, 1018, 1631, 1374, 2408, 213, 2571, 875, 1420, 2145, 1972],
         [2451, 0, 1745, 1524, 831, 1240, 959, 2596, 403, 1589, 1374, 357, 579],
@@ -150,9 +147,11 @@ matriz1 = [
         [1972, 579, 1260, 987, 371, 999, 701, 2099, 600, 1162, 1200, 504, 0],
     ]
 
+# another test matrix
 np.random.seed(42)
 matriz2 = np.random.randint(30, 2000, (30,30))
 
+# sets the matrix you want to solve
 matriz = matriz0
 print(matriz)
 
@@ -161,23 +160,24 @@ if __name__ == '__main__':
     
     start_time = time.time()
     
-    # lenMatrix = len(matriz)
     x = initialSol(0,len(matriz))    
     # print(x)
 
-#### ---------- Tentativa de paralelizar o problema ---------- ####
+#### ---------- Failed attempt to parallelize the problem ---------- ####
     # pool = mp.Pool(mp.cpu_count())
     # resultsParallel = [pool.apply(gvns, args=(x,1,3,100,matriz))]
     # pool.close()
     
 #### --------------------------------------------------------- ####
 
+    # Reduced VNS takes a lot less computational time but does not give the best results
     # sol, results = rvns(x,k_max=3,t_max=5000, matriz=matriz)
+
     sol, results = gvns(x,l_max=1,k_max=4,t_max=100, matriz=matriz)
     print(sol)
     print(results)
     
-    print("--- %s seconds ---" % (time.time() - start_time))
+    print(f"--- {time.time() - start_time} seconds ---")
     
     plt.plot(results)
     # plt.plot(resultsParallel[0][1])
