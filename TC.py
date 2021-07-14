@@ -153,6 +153,7 @@ matriz2 = np.random.randint(30, 2000, (30,30))
 
 # sets the matrix you want to solve
 matriz = matriz0
+print("\nChosen Matrix:")
 print(matriz)
 
 if __name__ == '__main__':
