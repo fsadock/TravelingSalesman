@@ -12,11 +12,11 @@ def initialSol(a,b):
     return x
 
 # cost function
-def fobj(x, matriz):
+def fobj(citiesArray, matriz):
     cost = 0
-    for i in range(len(x)-1):
-        cost += matriz[x[i]][x[i+1]]
-    cost+=matriz[x[len(x)-1]][x[0]]
+    for i in range(len(citiesArray)-1):
+        cost += matriz[citiesArray[i]][citiesArray[i+1]]
+    cost+=matriz[citiesArray[len(citiesArray)-1]][citiesArray[0]] # adds time (or distance) between the first and last cities, since the loop above won't account for it
     return cost
 
 # responsible for changing neighborhoods
@@ -53,7 +53,9 @@ def shake(x,k):
             y = y[0:j] + y[j:i][::-1] + y[i:len(x)]
     return y
 
-# returns the first improvement after permutating combinations of x
+# Returns the first improvement after permutating combinations of x - an array of route 
+# Using for loops I can control which permutation has already been calculated. Using something like shuffle could be better,
+    #  but when getting closer to the minimum value it could take forever to find another improvement.
 def firstImprovement(x, k, matriz):
     y = x[:]
     if k == 1:
@@ -64,7 +66,7 @@ def firstImprovement(x, k, matriz):
                     if fobj(y, matriz) < fobj(x, matriz): # if y is better than x, return y ( FIRST IMPROVEMENT )
                         return y
                     y = x[:]                              # else: sets y = x to proceed to the next permutation
-    elif k == 2:                            # this k == 2 sucks.
+    elif k == 2:                            # k == 2 NEEDS TO BE REIMPLEMENTED, just awful.
         for i in range(len(y)):
             for j in range(i, len(y)):
                 for u in range(j, len(y)):
@@ -127,7 +129,7 @@ def gvns(x,l_max, k_max, t_max, matriz):
     return x, results
 
 
-arquivo = "distance.csv"
+arquivo = "time.csv"
 matriz0 = np.genfromtxt(arquivo, delimiter=',') # uses numpy to read the matrix from the csv file
 
 # a smaller distance matrix
@@ -155,6 +157,7 @@ matriz2 = np.random.randint(30, 2000, (30,30))
 matriz = matriz0
 print("\nChosen Matrix:")
 print(matriz)
+print('\n')
 
 if __name__ == '__main__':
 
@@ -170,10 +173,11 @@ if __name__ == '__main__':
 #### --------------------------------------------------------- ####
 
     # Reduced VNS takes a lot less computational time but does not give the best results
-    # sol, results = rvns(x,k_max=3,t_max=5000, matriz=matriz)
+    # sol, results = rvns(x,k_max=4,t_max=1000000, matriz=matriz)
 
-    sol, results = gvns(x,l_max=1,k_max=4,t_max=100, matriz=matriz)
+    sol, results = gvns(x,l_max=1,k_max=3,t_max=10, matriz=matriz)
     print(sol)
+    print()
     print(results)
     
     print(f"--- {time.time() - start_time} seconds ---")
