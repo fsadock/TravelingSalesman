@@ -32,7 +32,7 @@ def neighborhoodChange(x, x_lin, k, matriz):
     return x,k
 
 # 'shake' neighborhoods
-def shake(x,k):
+def shake(x,k, matriz):
     i,j,u = random.sample(list(range(len(matriz))),3)
     y = x[:]
 
@@ -91,7 +91,7 @@ def rvns(x, k_max, t_max, matriz):
     while t<=t_max:
         k = 1
         while k <= k_max:
-            x_lin = shake(x,k)
+            x_lin = shake(x,k, matriz)
             t+=1
             pbar.update(1)
             x, k = neighborhoodChange(x, x_lin, k, matriz)
@@ -107,7 +107,7 @@ def bvns(x, k_max, t_max, matriz):
     while t<=t_max:
         k = 1
         while k <= k_max:
-            x_lin = shake(x,k)
+            x_lin = shake(x,k, matriz)
             x_dlin = firstImprovement(x_lin, k, matriz)
             x, k = neighborhoodChange(x, x_dlin, k, matriz)
         t+=1
@@ -118,13 +118,13 @@ def bvns(x, k_max, t_max, matriz):
 
 # General Variable Neighborhood Search
 def gvns(x,l_max, k_max, t_max, matriz):
-    t = 0
+    t = 1
     results = []
     pbar = tqdm.tqdm(total=t_max)
     while t<=t_max:
         k = 1
         while k <= k_max:
-            x_lin = shake(x,k)
+            x_lin = shake(x,k, matriz)
             x_dlin = VND(x_lin, l_max, matriz)
             x, k = neighborhoodChange(x, x_dlin, k, matriz)
         t+=1
@@ -166,21 +166,23 @@ def main():
     print(matriz)
     print('\n')
     start_time = time.time()
-    x = initialSol(0,len(matriz))    
+    x = initialSol(0,len(matriz))
+
+    print(fobj(x, matriz))
     # print(x)
 
-#### ---------- Failed attempt to parallelize the problem ---------- ####
-    # pool = mp.Pool(mp.cpu_count())
-    # resultsParallel = [pool.apply(gvns, args=(x,1,3,100,matriz))]
-    # pool.close()
+    #### ---------- Failed attempt to parallelize the problem ---------- ####
+        # pool = mp.Pool(mp.cpu_count())
+        # resultsParallel = [pool.apply(gvns, args=(x,1,3,100,matriz))]
+        # pool.close()
     
-#### --------------------------------------------------------- ####
+    #### --------------------------------------------------------- ####
 
     # Reduced VNS takes a lot less computational time but does not give the best results
-    # sol, results = bvns(x,k_max=4,t_max=1000, matriz=matriz)
-    print(fobj(x, matriz))
+    # sol, results = rvns(x,k_max=4,t_max=1000, matriz=matriz)
+    
     print()
-    sol, results = gvns(x,l_max=2,k_max=3,t_max=100, matriz=matriz)
+    sol, results = gvns(x,l_max=2,k_max=4,t_max=100, matriz=matriz)
     print(sol)
     print()
     print(results[-1])
@@ -189,7 +191,7 @@ def main():
     
     plt.plot(results)
     # plt.plot(resultsParallel[0][1])
-    # plt.show()
+    plt.show()
 
 if __name__ == '__main__':
     main()
